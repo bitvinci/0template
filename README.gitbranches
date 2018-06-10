@@ -1,0 +1,239 @@
+===============================================================================
+*                         GIT BRANCHING MODEL AT IMO                          *
+===============================================================================
+*                                                                             *
+*   Version: 1.0.1                                                            *
+*   Release date: 11/25/2014                                                  *
+*   Authors:                                                                  *
+*       Hrafn Gudmundsson (hrafng@vedur.is)                                   *
+*   Git: git@repo.vedur.is:0template                                          *
+*                                                                             *
+===============================================================================
+
+CONTENTS
+--------
+
+* Introduction
+* Branch definitions
+* Basic workflow example
+
+
+INTRODUCTION
+------------
+
+The following branching scheme is intended for use at the development 
+division at IMO (UTÞróun) and is expected to be implemented by all 
+its developers. This is done to streamline and make the development process 
+more efficient. 
+
+
+
+BRANCH DEFINITIONS
+------------------
+
+Our git branching model is based on a scheme explained here:
+
+    http://nvie.com/posts/a-successful-git-branching-model/
+
+We have two main branches with infinite lifetime:
+
+[master]
+
+    Production ready state
+
+[develop]
+
+    (master -> develop -> master)
+
+    * Latest delivered development changes for next release
+    * Nightly builds
+    * When reaches a stable point -> merged back into master and tagged
+
+and the following supporting branches with limited lifetime:
+
+[feature]
+
+    (develop -> feature -> develop)
+
+    Start working on myfeature:
+
+        $ git checkout -b myfeature develop
+
+    Incorporate a finished feature on develop:
+
+        $ git checkout develop
+        $ git merge --no-ff myfeature
+        $ git branch -d myfeature
+        $ git push origin develop
+
+[release]
+
+    (develop -> release -> develop,master)
+
+    * Naming convention: release-*
+    * For minor bug fixes, preparing meta-data
+    * Assign a version number
+    * No new features
+
+    $ git checkout -b release-1.2 develop
+    $ ./bump-version.sh 1.2
+    $ git commit -a -m "Bumped version number to 1.2"
+
+    And when release ready:
+
+    $ git checkout master
+    $ git merge --no-ff release-1.2
+    $ git tag -a 1.2
+    $ git checkout develop
+    $ git merge --no-ff release-1.2
+    $ git branch -d release-1.2
+
+[hotfix]
+
+    (master -> hotfix -> develop,master)
+
+    * Maintainance branch for quickly patching product releases in the master
+      branch
+    * Naming convention: hotfix-*
+    * Unplanned production release due to undesired state of a live production
+      version -> critical bug
+    
+    For example, if version 1.2 is the current production release running live 
+    and causing troubles due to a severe bug. But changes on develop are yet 
+    unstable. We may then branch off a hotfix branch and start fixing the 
+    problem:
+
+    $ git checkout -b hotfix-1.2.1 master
+    $ ./bump-version.sh 1.2.1
+    $ git commit -a -m "Bumped version number to 1.2.1"
+
+    Then, fix the bug and commit the fix in one or more separate commits.
+
+    $ git commit -m "Fixed severe production problem"
+
+    When finished merge back to master and develop:
+
+    $ git checkout master
+    $ git merge --no-ff hotfix-1.2.1
+    $ git tag -a 1.2.1
+    $ git checkout develop
+    $ git merge --no-ff hotfix-1.2.1
+    $ git branch -d hotfix-1.2.1
+
+    However, if a release branch currently exists, the hotfix changes need 
+    to be merged into that release branch, instead of develop.
+
+
+
+BASIC WORKFLOW EXAMPLE
+----------------------
+
+Now lets demonstrate when two developers are working in the same project.
+Usually, when developers collaborate in git they establish a bare git 
+repository that serves as the authoritative repository where all changes 
+from all users are pushed and pulled from. A bare git repository does 
+not contain any working directory or staging area. Since git does not 
+care where the repository is stored we can show how this works on the local 
+file system:
+
+    hrafng@gaddur:~$ git init --bare --shared=0777 /tmp/gittest
+    Initialized empty shared Git repository in /tmp/gittest/
+
+Now lets clone this repository so we have a development version 
+of it:
+
+    hrafng@gaddur:~$ git clone /tmp/gittest/
+
+and add some content for our initial commit:
+
+    hrafng@gaddur:~/gittest$ touch foo.txt
+    hrafng@gaddur:~/gittest$ git add foo.txt
+    hrafng@gaddur:~/gittest$ git cm -m "Initial commit"
+    hrafng@gaddur:~/gittest$ git checkout -b develop
+    hrafng@gaddur:~/gittest$ git lol
+    * 3647889 (HEAD, master, develop) Initial commit
+
+We push master and develop to the remote:
+
+    hrafng@gaddur:~/gittest$ git push --set-upstream origin master
+    hrafng@gaddur:~/gittest$ git push --set-upstream origin develop
+
+The --set-upstream option is only necessary for the initial 
+commit to set the remote-tracking branches:
+
+    hrafng@gaddur:~/gittest$ git lol
+    * 3647889 (HEAD, origin/master, origin/develop, master, develop) Initial commit
+
+At this point the development starts on the develop branch. Lets say in this 
+case there are two developer, hrafng and gitter that start working together on 
+the new project. gitter clones the central authoritative repository:
+
+    gitter@gaddur:~$ git clone /tmp/gittest/
+
+Gitter now starts working on a new feature on the develop branch and commits 
+the changes:
+
+    gitter@gaddur:~/gittest$ git co develop
+    gitter@gaddur:~/gittest$ echo "New feature 1" >> foo.txt
+    gitter@gaddur:~/gittest$ git cm -a -m "New feature 1"
+    gitter@gaddur:~/gittest$ git push origin develop
+
+Now hrafng updates his repository and introduces a small fix to feature 1:
+
+    hrafng@gaddur:~/gittest$ git fetch
+    hrafng@gaddur:~/gittest$ git lol
+    * 9d47369 (origin/develop) New feature 1
+    * 3647889 (HEAD, origin/master, master, develop) Initial commit
+
+hrafng sees that the remote develop branch is one commit ahead of the local 
+branch so he needs to merge to catch up (a fast forward merge in this case):
+
+    hrafng@gaddur:~/gittest$ git merge develop origin/develop
+    hrafng@gaddur:~/gittest$ git lol
+    * 3bf7d7b (HEAD, develop) Merge branch 'develop', remote-tracking branch 
+        'origin/develop' into develop
+    * 9d47369 (origin/develop) New feature 1
+    * 3647889 (origin/master, master) Initial commit
+
+Now hrafng adds a little change to the feature and after some debugging he 
+decides its time to commit and start a release branch:
+
+    hrafng@gaddur:~/gittest$ echo ">Small change" >> foo.txt 
+    hrafng@gaddur:~/gittest$ git add foo.txt
+    hrafng@gaddur:~/gittest$ git cm -m "Small change"
+
+It turns out one bugfix needs to be applied:
+
+    hrafng@gaddur:~/gittest$ echo ">>bugfix 1" >> foo.txt 
+    hrafng@gaddur:~/gittest$ git cm -a -m "Bugfix 1"
+    hrafng@gaddur:~/gittest$ git push origin release-0.1
+    hrafng@gaddur:~/gittest$ git push origin develop
+    
+Gitter now starts testing and bugfixing the release:
+
+    gitter@gaddur:~/gittest$ git pull 
+    gitter@gaddur:~/gittest$ git branch --track release-0.1 origin/release-0.1
+    gitter@gaddur:~/gittest$ git co release-0.1
+    gitter@gaddur:~/gittest$ echo ">>bugfix 2" >> foo.txt
+    gitter@gaddur:~/gittest$ git cm -a -m "bugfix 2"
+
+Now lets say gitter has tested the new bugfix and is happy with it and thinks
+the current development commit is release ready. It is time to merge and tag 
+the new version to the master:
+
+    gitter@gaddur:~/gittest$ git co master
+    gitter@gaddur:~/gittest$ git merge --no-ff release-0.1
+    gitter@gaddur:~/gittest$ git tag -a 0.1
+
+and also merge the changes to develop:
+
+    gitter@gaddur:~/gittest$ git co develop
+    gitter@gaddur:~/gittest$ git merge --no-ff release-0.1
+
+and finally push to remote and delete release branch:
+
+    gitter@gaddur:~/gittest$ git branch -d release-0.1
+    gitter@gaddur:~/gittest$ git push origin --delete release-0.1
+    gitter@gaddur:~/gittest$ git push 
+    gitter@gaddur:~/gittest$ git push --tags
+

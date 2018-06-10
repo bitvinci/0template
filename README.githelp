@@ -1,0 +1,426 @@
+===============================================================================
+*                           FIRST STEPS IN GIT                                *
+===============================================================================
+*                                                                             *
+*   Version: 1.1                                                              *
+*   Release date: 06/10/2018                                                  *
+*   Author:                                                                   *
+*       Hrafn Gudmundsson (hrafng@github)                                     *
+*   Git: https://github.com/bitvinci/0template.git
+*                                                                             *
+===============================================================================
+
+
+CONTENTS
+--------
+
+* Introduction
+* Requirements
+* Installation
+* Configuration
+* Examples
+* FAQ
+* Using vimdiff in merge conflicts
+
+
+INTRODUCTION
+------------
+
+In software development, Git is a distributed revision control and source code 
+management (SCM) system with an emphasis on speed. Git was initially designed 
+and developed by Linus Torvalds for Linux kernel development in 2005. 
+(http://en.wikipedia.org/wiki/Git_%28software%29)
+
+* The three stages: Git has three main states that your files can reside in:
+committed, modified, and staged. This leads us to the three main sections of a
+Git project, the Git directory, the working directory, and the staging area.
+The staging area is sometimes called the Index or the Object store. 
+
+
+
+REQUIREMENTS
+------------
+
+* git version 1.7.9.5
+
+
+INSTALLATION
+------------
+
+On debian based systems:
+
+$ apt-get install git
+
+
+CONFIGURATION
+-------------
+
+* Git on Github:
+
+    The Github url for hrafng is https://github.com/hrafng
+
+    Use https://github.com/hrafng/project_name.git in clone/pull/push commands.
+
+    $ git clone https://github.com/hrafng/project_name.git
+
+    It is recommended to use the git template where starting a new project. 
+    To e.g. extract the current new version 1.0.1:
+
+    $ git archive --format tar --remote=//github.com/hrafng/0template.git \
+        --output /tmp/template.tar 1.0.1
+    $ mkdir myproj
+    $ tar xf /tmp/template.tar -C myproj/
+    $ cd myproj
+    $ git init
+
+
+* Profile setup:
+
+    Before you start using git it is important to let git know who you are:
+
+    $ git config --global user.name "Jon Jonsson"
+    $ git config --global user.email "jonjonsson@jon.com"
+
+    which creates the global config file ~/.gitconfig.
+
+    Also important to config your editor of choice and merge tool:
+
+    $ git config --global core.editor vim
+    $ git config --global diff.tool vimdiff
+    $ git config --global merge.tool vimdiff
+    $ git config --global merge.conflictstyle diff3
+    $ git config --global mergetool.prompt false
+
+    Nice to add some colors:
+
+    $ git config --global color.ui true
+
+    And very useful to create some aliases:
+
+    $ git config --global alias.lol "log --oneline --abbrev-commit --all \
+        --graph --decorate --color"
+    $ git config --global alias.br "branch"
+    $ git config --global alias.st "status"
+    $ git config --global alias.co "checkout"
+    $ git config --global alias.cm "commit"
+
+    It can be convenient to set the default push behaviour to simple:
+
+    $ git config --global push.default simple
+
+    which means '''git push''' will push only the current branch to the one 
+    that git pull would pull from, and also checks that their names match.
+
+
+* The git ignore file:
+
+    To make git ignore i.e. latex generated files, cd to project directory 
+    create .gitignore file:
+
+    $ cat .gitignore 
+    *.aux
+    *.dvi
+    *.log
+    *.pdf
+    *.tgz
+
+    Next, when you do "git status", git will ignore these files. If you like to
+    explicitly track a particular file that is already ignored just add 
+    "!file.dvi" to the .gitignore file. You can also create additional 
+    .gitignore files in subdirectories of the project.
+
+
+
+EXAMPLES
+--------
+
+1. Pushing a new branch to the central repo:
+
+    Lets say you want to start a new branch, commit some changes and then push
+    it to the central repo:
+
+    $ git lol
+    * 749c722 (HEAD, origin/master, origin/HEAD, master) nú hefi ég breytt 
+    * 9a63e0f ég var að gera
+
+    Here we only have a master branch and the remote branch origin/master
+    pointing at the same commit. Now we create a new devel branch and switch to
+    it:
+
+    $ git br devel
+    $ git co devel
+    $ git lol
+    * 749c722 (HEAD, origin/master, origin/HEAD, master, devel) nú hefi ég
+    * 9a63e0f ég var að gera
+
+    Now if we make changes and commit:
+
+    $ git lol
+    * aedc982 (HEAD, devel) New file
+    * 749c722 (origin/master, origin/HEAD, master) nú hefi ég breytt halló 
+    * 9a63e0f ég var að gera
+
+    we see the devel branch advances to the newest commit and HEAD is now
+    pointing at it. If we want to push the new devel branch to the central
+    repo we first check the configured remotes:
+
+    $ git remote -v
+    origin https://github.com/hrafng/test.git (fetch)
+    origin https://github.com/hrafng/test.git (push)
+
+    In this case it is only https://github.com/hrafng/test.git which has the 
+    name origin. To push we do:
+
+    $ git push origin devel
+
+    and now we see the origin/devel branch has been updated to point to 
+    the same commit as the local devel branch points to:
+
+    $ git lol
+    * aedc982 (HEAD, origin/devel, devel) New file
+    * 749c722 (origin/master, origin/HEAD, master) nú hefi ég breytt halló 
+    * 9a63e0f ég var að gera
+
+
+2. Exporting a certain commit from repo?:
+
+    To extract commit 32084d6 from local repository and save to tar file:
+
+    $ git archive --format tar --output /tmp/ggg.tar 32084d6
+
+    To extract a tag marked v1.0 from remote repository and save to tar.gz 
+    file:
+
+    $ git archive --format tar.gz --remote=https://github.com/hrafng/test.git \
+        --output /tmp/gittesting2.tar.gz v1.0
+
+
+3. Tagging a new version:
+
+    Lets say we are working on a devel branch and want to merge it to master
+    and mark a new version to deploy with a tag:
+
+    $ git lol
+    * 00869c4 (HEAD, origin/master, origin/HEAD, master) sfasdf
+    | * e914f8b (origin/devel, devel) New line
+    | * aedc982 New file
+    |/  
+    * 749c722 nú hefi ég breytt halló í bless
+
+    We checkout master and merge it with devel:
+
+    $ git checkout master
+    Switched to branch 'master'
+
+    $ git merge devel
+
+    $ git lol
+    *   c34eee0 (HEAD, master) Merge branch 'devel'
+    |\  
+    | * e914f8b (origin/devel, devel) New line
+    | * aedc982 New file
+    * | 00869c4 (origin/master, origin/HEAD) sfasdf
+    |/  
+    * 749c722 nú hefi ég breytt halló í bless
+
+    Now we tag this as version 1.0 and push to origin:
+
+    $ git tag -a v1.0
+    $ git lol
+    *   c34eee0 (HEAD, tag: v1.0, master) Merge branch 'devel'
+    $ git push origin --tags
+
+    Lets say you see that you needed to make one more change before this can be
+    considered a new version. We make the change and commit:
+
+    $ git lol
+    * 8e6d6de (HEAD, master) small change
+    *   c34eee0 (tag: v1.0, origin/master, origin/HEAD) Merge branch 'devel'
+
+    Now we want to move the tag up to HEAD and push to origin:
+
+    $ git tag -d v1.0
+    $ git push origin :refs/tags/v1.0
+    $ git tag v1.0
+    $ git lol
+    * 8e6d6de (HEAD, tag: v1.0, master) small change
+    *   c34eee0 (origin/master, origin/HEAD) Merge branch 'devel'
+    $ git push origin --tags
+
+    And to export this version:
+
+    $ git archive --format tar --output ~/tmp/testv1.0.tar \
+        --remote https://github.com/hrafng/test.git v1.0
+
+FAQ
+---
+
+1. Where can I find good resources on the web?
+
+    These sites are quite good to start with:
+
+    * http://think-like-a-git.net/
+    * https://peepcode.com/products/git-internals-pdf
+    * http://gitref.org/
+    * http://git-scm.com/book
+    * http://nvie.com/posts/a-successful-git-branching-model/
+
+    And here are some good lectures:
+
+    * http://www.youtube.com/watch?v=ZDR433b0HJY: 
+        Introduction to Git with Scott Chacon of GitHub
+    * http://www.youtube.com/watch?v=1ffBJ4sVUb4: 
+        Git For Ages 4 And Up
+    * http://www.youtube.com/watch?v=4XpnKHJAok8:
+        Tech Talk: Linus Torvalds on git
+
+
+2. Are there any nice GUI tools for git?
+
+    Yes, even though we recommend using git in the terminal at all times, these 
+    GUI tools can be a nice complement to the powerful git command:
+
+    * gitk
+    * git-cola
+    * Smart Git (ekki open source en hægt að nota non-comercial útgáfu)
+
+
+3. How do I convert an existing working directory to git working directory 
+and push to a remote?
+
+    If you want to start using git for an already existing project:
+
+    $ cd <localdir>
+    $ git init 
+    $ git add .
+    $ git cm -m "Initial commit"
+    $ git remote add origin https://github.com/hrafng/project_name.git
+    $ git push -u origin master
+
+
+4. How do I migrate to Git from Subversion?
+
+    Git and Other Systems - Migrating to Git:
+    http://git-scm.com/book/en/Git-and-Other-Systems-Migrating-to-Git
+
+    Lets use "git svn" to convert e.g. Tespri into a git repository. Since
+    Tespri is quite large, we only want to extract the newest few commits. We
+    use "svn log" to find the desired revision number. We first create the user
+    file:
+
+    $ cat users.txt 
+    jon = jon jonsson <jon@jon.com>
+    $ git svn clone http://subversion.repo.com/some_project -r3316:HEAD \
+        --authors-file=users.txt --no-metadata -s tespri -T trunc -b \
+        branches -t tags
+
+    And then do some post-clone cleanup of tags:
+
+    $ cd some_project
+    $ git for-each-ref refs/remotes/tags | cut -d / -f 4- | grep -v @ | \
+    while read tagname; do git tag "$tagname" "tags/$tagname"; \
+    git branch -r -d "tags/$tagname"; done
+    $ git for-each-ref refs/remotes | cut -d / -f 3- | grep -v @ | \
+    while read branchname; do git branch \
+        "$branchname" "refs/remotes/$branchname"; \
+    git branch -r -d "$branchname"; done
+
+    And then finally add the remote git server and push to it:
+
+    $ git remote add origin https://github.com/hrafng/some_project.git
+    $ git push origin --all
+    $ git push origin --tags
+
+
+
+
+USING VIMDIFF IN MERGE CONFLICTS
+--------------------------------
+
+$ ~/tmp$ git init gitvimdifftest
+$ ~/tmp$ cd gitvimdifftest/
+$ ~/tmp/gitvimdifftest$ vi animals.txt
+$ ~/tmp/gitvimdifftest$ 
+$ ~/tmp/gitvimdifftest$ git add animals.txt
+$ ~/tmp/gitvimdifftest$ git cm -m "Initial commit"
+$ ~/tmp/gitvimdifftest$ git lol
+$ * 9ec4573 (HEAD, master) Initial commit
+$ ~/tmp/gitvimdifftest$ git branch feature
+$ ~/tmp/gitvimdifftest$ git co feature
+$ ~/tmp/gitvimdifftest$ vi animals.txt 
+$ ~/tmp/gitvimdifftest$ git diff
+$ diff --git a/animals.txt b/animals.txt
+index 782b86d..f50e644 100644
+--- a/animals.txt
++++ b/animals.txt
+@@ -1,4 +1,4 @@
+ dog
+ fox
+-cat
++pussy
+ lion
+$ ~/tmp/gitvimdifftest$ git cm animals.txt -m "New animal"
+$ ~/tmp/gitvimdifftest$ git lol
+$ * 1287d3a (HEAD, feature) New animal
+$ * 9ec4573 (master) Initial commit
+$ ~/tmp/gitvimdifftest$ git co master
+$ ~/tmp/gitvimdifftest$ vi animals.txt 
+$ ~/tmp/gitvimdifftest$ 
+$ ~/tmp/gitvimdifftest$ git diff
+$ diff --git a/animals.txt b/animals.txt
+index 782b86d..1ad15e8 100644
+--- a/animals.txt
++++ b/animals.txt
+@@ -1,4 +1,4 @@
+ dog
+ fox 
+-cat
++kitten
+ lion
+$ ~/tmp/gitvimdifftest$ git cm animals.txt -m "New kind of animal"
+$ ~/tmp/gitvimdifftest$ git lol
+* 400fa26 (HEAD, master) New kind of animal
+| * 1287d3a (feature) New animal
+|/  
+* 9ec4573 Initial commit
+$ ~/tmp/gitvimdifftest$ git merge feature
+Auto-merging animals.txt
+CONFLICT (content): Merge conflict in animals.txt
+Automatic merge failed; fix conflicts and then commit the result.
+$ ~/tmp/gitvimdifftest$ git mergetool 
+
+This opens vimdiff in diff3 mode where:
+*LOCAL — this is file from the current branch
+*BASE — common ancestor, how file looked before both changes
+*REMOTE — file you are merging into your branch
+*MERGED — merge result, this is what gets saved in the repo
+To e.g. accept the feature changes we move to the MERGED file
+and type ":diffget RE" and ":wqa"
+ Merging:
+ animals.txt 
+
+ Normal merge conflict for 'animals.txt':
+   {local}: modified file
+   {remote}: modified file
+ 4 files to edit
+ $ ~/tmp/gitvimdifftest$ git st
+ # On branch master
+ # Changes to be committed:
+ #
+ #       modified:   animals.txt
+ #
+ # Untracked files:
+ #   (use "git add <file>..." to include in what will be committed)
+ #
+ #       animals.txt.orig
+ $ ~/tmp/gitvimdifftest$ git commit 
+ [master f50e1f4] Merge branch 'feature'
+ $ ~/tmp/gitvimdifftest$ git lol
+ *   f50e1f4 (HEAD, master) Merge branch 'feature'
+ |\  
+ | * 1287d3a (feature) New animal
+ * | 400fa26 New kind of animal
+ |/  
+ * 9ec4573 Initial commit
+
+

@@ -1,0 +1,99 @@
+===============================================================================
+*                                PROJECT NAME                                 *
+===============================================================================
+*                                                                             *
+*   Version: 1.0                                                              *
+*   Release date: MM/DD/YYYY                                                  *
+*   Authors:                                                                  *
+*       Author One (email)                                                    *
+*       Author Two (email)                                                    *
+*   Git: git@git.com:project_name                                       *
+*   Website: www.project_name.com                                             *
+*                                                                             *
+===============================================================================
+
+CONTENTS
+--------
+
+* Introduction
+* Requirements
+* Installation
+* Configuration
+* Examples
+* Troubleshooting
+* FAQ
+* Maintainers
+
+
+INTRODUCTION
+------------
+
+The introduction (required) shall consist of a brief paragraph or two that 
+summarizes the purpose and function of this project. This is often the first 
+paragraph on the project page. 
+
+Practical guidelines and good conventions:
+
+* Keep lines under 80 characters long.
+* Use * or 1. for bullitins or numbered items
+* Use indentation sparingly but wisely, preferably only for subsections
+* Use uppercase and ------ for main sections
+
+
+REQUIREMENTS
+------------
+
+The requirements section (required) shall make it clear whether this project 
+requires any external modules, libraries, data, etc. If there are no 
+requirements, just say "No special requirements".
+
+
+INSTALLATION
+------------
+
+The installation section (required) explains all necessary steps to install 
+the scripts/programs in the project. Consider replacing this section with 
+"See INSTALL file" if your installation instructions are especially 
+complex, or require jumping through several hoops.
+
+
+CONFIGURATION
+-------------
+
+The configuration section (required). 
+
+
+EXAMPLES
+--------
+
+The examples section (optional) shows one or more simple and practical 
+examples of usage.
+
+
+TROUBLESHOOTING
+---------------
+
+The troubleshooting section (optional) should describe and handle special
+known cases that the user might encounter and cause problems.
+
+
+FAQ
+---
+
+The FAQ section (optional) should list any questions that are constantly 
+being asked.
+
+
+MAINTAINERS
+-----------
+
+Current maintainers:
+
+* Philip J. Fry (pjf@planetexpress.com)
+* Bender Bending Rodriguez (bbr@planetexpress.com)
+
+This project has been sponsered by:
+
+* BIG BUSINESS LIMITED
+A Free Market enterprise :-)
+
